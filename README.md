@@ -78,6 +78,35 @@ systems](https://hexdocs.pm/nerves/customizing-systems.html).
 The Linux kernel is built from the mainline 6.12 release with patches for the
 Allwinner T113-S4. The default kernel configuration is in `linux_defconfig`.
 
+## ESP32C6 radio (Trellis Pi)
+
+The Trellis Pi variant (`dts/allwinner/sun8i-t113s-trellis-pi.dts`) uses an
+ESP32C6 module on SDIO (`&mmc1`) for WiFi, and UART for Bluetooth HCI, instead
+of the USB Realtek modules other Trellis variants use. Its kernel driver
+(`trellis_radio`) is packaged as `package/trellis_radio/`, enabled via
+`BR2_PACKAGE_TRELLIS_RADIO=y` in `nerves_defconfig`, and pulled from
+[gworkman/trellis_radio](https://github.com/gworkman/trellis_radio) at a
+pinned commit.
+
+To build against a local working copy of that driver instead of the pinned
+commit (e.g. while developing the driver itself), create an uncommitted
+`local.mk` in your Buildroot **output** directory (the one `O=` points at --
+same directory as its `.config`, e.g. wherever `mix nerves.system.shell` or
+your own `make ... O=<dir>` invocation puts you; *not* this repo's root):
+
+```make
+TRELLIS_RADIO_OVERRIDE_SRCDIR = /path/to/your/esp-hosted/checkout
+```
+
+(Point it at the repo root, not `driver/` -- the package needs `shared/include/`
+alongside `driver/` too. Note the variable name matches the plain package-name
+prefix used in `package/trellis_radio/trellis_radio.mk`, e.g.
+`TRELLIS_RADIO_VERSION` -- it is *not* prefixed with `BR2_PACKAGE_`, unlike the
+Kconfig enable symbol.) Once in place, `make trellis_radio-rebuild all` picks
+up local changes without a full clean rebuild. See Buildroot's
+"Development workflow" chapter (`<pkg>_OVERRIDE_SRCDIR`) for the general
+mechanism.
+
 ## Special Thanks
 
 Thank you to Connor Rigby who brought up initial support for the Allwinner
