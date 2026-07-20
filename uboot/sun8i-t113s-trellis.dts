@@ -70,7 +70,7 @@
 	vcc-pf-supply = <&reg_3v3>;
 	vcc-pg-supply = <&reg_3v3>;
 
-	/* Goatmire Badge */
+	/* Goatmire Badge, and Trellis (PG2/PG3 are unconnected on Trellis) */
 	uart4_pd_pins: uart4-pd-pins {
 		pins = "PD7", "PD8";
 		function = "uart4";
@@ -83,10 +83,14 @@
 	};
 };
 
-/* shell */
+/* shell -- PD7/PD8, matches the Trellis kernel DTS's console pins
+ * (sun8i-t113s-trellis-pi.dts) and extlinux's console=ttyS4. This U-Boot
+ * DTB is shared across all board variants (one BR2_TARGET_UBOOT_CUSTOM_DTS_PATH),
+ * so this also needs to stay correct for Goatmire Badge; it does not need
+ * to match NSK's PG2/PG3, which is a genuinely different physical UART. */
 &uart4 {
 	pinctrl-names = "default";
-	pinctrl-0 = <&uart4_pg_pins>;
+	pinctrl-0 = <&uart4_pd_pins>;
 	status = "okay";
 };
 
