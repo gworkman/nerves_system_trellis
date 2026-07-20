@@ -94,7 +94,16 @@
     reg_esp32_pwrseq: esp32-pwrseq {
         compatible = "mmc-pwrseq-simple";
         reset-gpios = <&pio 3 16 GPIO_ACTIVE_LOW>; /* PD16 = ESP_RESET */
-        post-power-on-delay-ms = <200>;            /* starting value; tune on hardware */
+        /* 200ms was the untuned starting value. Raised to 1800ms during the
+         * same real-hardware session that found the bus-width=1 fix below
+         * (see that comment) -- the firmware's application-level SDIO
+         * slave HAL isn't ready to answer CCCR/FBR register access until
+         * ~1.1-1.2s after enumeration, so this gives real margin before
+         * mmc_rescan() even starts. Whether this delay alone was
+         * necessary once bus-width=1 was also in place wasn't isolated
+         * (both changed together); kept as a safety margin since it's
+         * cheap and clearly can't hurt. */
+        post-power-on-delay-ms = <1800>;
     };
 };
 
@@ -292,7 +301,24 @@
 &mmc1 {
     vmmc-supply = <&reg_3v3>;
     vqmmc-supply = <&reg_3v3>;
-    bus-width = <4>;
+    /* 1-bit, not 4-bit: confirmed on real hardware that 4-bit mode's CCCR
+     * bus-width-switch CMD52 reliably hangs against this ESP32C6
+     * firmware (sdio_enable_func() then gets a hard bus-level ETIMEDOUT
+     * on every subsequent CMD52, no matter the clock speed or how long
+     * you wait/retry -- see esp-hosted's driver/sdio/esp_sdio.c
+     * init_sdio_func() for the host-side half of this story). Schematic
+     * review confirmed D0-D3/CMD/CLK pin assignment and pull-ups
+     * (R38-R42, 51k) are wired correctly per ESP32C6's fixed SDIO slave
+     * IOMUX pins, so this isn't a wiring bug -- something about the
+     * 4-bit width-switch handshake itself breaks on this firmware/
+     * kernel combination, root cause not yet confirmed. 1-bit mode
+     * sidesteps that negotiation entirely; everything downstream
+     * (including an independently-negotiated High Speed clock switch)
+     * then works immediately and reliably. Trade-off: reduced SDIO
+     * throughput. Revisit if 4-bit is ever needed -- a logic analyzer on
+     * CMD/D0-D3 during the width switch would settle the real cause
+     * directly. */
+    bus-width = <1>;
     non-removable;
     broken-cd;
     no-1-8-v;
