@@ -1,1 +1,8 @@
 CONFIG_DEVMEM=y
+
+# Temporarily added for on-device debugging (scripts/debug/*.sh in the
+# esp-hosted repo use these) -- see esp-hosted's scripts/debug/README.md.
+# Not load-bearing for normal operation; safe to remove if image size ever
+# matters more than having them available.
+CONFIG_BASENAME=y
+CONFIG_READLINK=y

@@ -56,6 +56,15 @@ BR2_PACKAGE_WPA_SUPPLICANT_DEBUG_SYSLOG=y
 BR2_PACKAGE_WPA_SUPPLICANT_WPS=y
 BR2_PACKAGE_WPA_SUPPLICANT_WPA3=y
 BR2_PACKAGE_WPA_SUPPLICANT_CTRL_IFACE=y
+BR2_PACKAGE_WPA_SUPPLICANT_CLI=y
+# Temporarily added for on-device WiFi/network debugging (a driver
+# resiliency-redesign investigation needed real association/routing/packet
+# visibility that busybox alone couldn't provide -- see esp-hosted's
+# scripts/debug/README.md). Not load-bearing for normal operation; revisit
+# whether to keep these once that investigation concludes.
+BR2_PACKAGE_IW=y
+BR2_PACKAGE_IPROUTE2=y
+BR2_PACKAGE_TCPDUMP=y
 BR2_PACKAGE_TRELLIS_RADIO=y
 # BR2_TARGET_ROOTFS_TAR is not set
 BR2_TARGET_UBOOT=y
